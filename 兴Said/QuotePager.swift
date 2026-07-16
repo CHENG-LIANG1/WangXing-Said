@@ -8,6 +8,7 @@ import SwiftUI
 struct QuotePager: View {
     let quotes: [XingQuote]
     let selectedID: String
+    let instantSelectionID: String?
     let textColor: Color
     let onDoubleTap: () -> Void
     let onSelectionChange: (String) -> Void
@@ -17,12 +18,14 @@ struct QuotePager: View {
     init(
         quotes: [XingQuote],
         selectedID: String,
+        instantSelectionID: String? = nil,
         textColor: Color,
         onDoubleTap: @escaping () -> Void,
         onSelectionChange: @escaping (String) -> Void
     ) {
         self.quotes = quotes
         self.selectedID = selectedID
+        self.instantSelectionID = instantSelectionID
         self.textColor = textColor
         self.onDoubleTap = onDoubleTap
         self.onSelectionChange = onSelectionChange
@@ -59,8 +62,16 @@ struct QuotePager: View {
         .onChange(of: selectedID) { _, newID in
             guard scrollID != newID else { return }
 
-            withAnimation(.smooth(duration: 0.38)) {
-                scrollID = newID
+            if newID == instantSelectionID {
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
+                    scrollID = newID
+                }
+            } else {
+                withAnimation(.smooth(duration: 0.38)) {
+                    scrollID = newID
+                }
             }
         }
         .ignoresSafeArea()

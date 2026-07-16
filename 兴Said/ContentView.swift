@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var isShowingFavorites = false
     @State private var isShowingNotifications = false
     @State private var favoritesDetent: PresentationDetent = .medium
+    @State private var instantQuoteID: String?
 
     private let quotes = XingQuoteStore.all
     private let backgrounds = XingBackground.palette
@@ -54,6 +55,7 @@ struct ContentView: View {
             QuotePager(
                 quotes: quotes,
                 selectedID: selectedQuoteID,
+                instantSelectionID: instantQuoteID,
                 textColor: background.textColor,
                 onDoubleTap: nextBackground,
                 onSelectionChange: { selectedQuoteID = $0 }
@@ -82,6 +84,7 @@ struct ContentView: View {
                 quotes: favoriteQuotes,
                 selectedQuoteID: selectedQuoteID
             ) { quote in
+                instantQuoteID = quote.id
                 selectedQuoteID = quote.id
                 isShowingFavorites = false
             }

@@ -27,13 +27,14 @@ struct NotificationsSheet: View {
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
                     .foregroundStyle(.secondary)
 
-                Picker("接收方式", selection: $mode) {
-                    Text("关闭").tag("off")
-                    Text("随机").tag("random")
-                    Text("定时").tag("scheduled")
-                }
-                .labelsHidden()
-                .pickerStyle(.segmented)
+                GlassSegmentedControl(
+                    selection: $mode,
+                    options: [
+                        SegmentOption(id: "off", title: "关闭"),
+                        SegmentOption(id: "random", title: "随机"),
+                        SegmentOption(id: "scheduled", title: "定时")
+                    ]
+                )
             }
             .padding(.horizontal, 22)
             .padding(.top, 18)
@@ -48,13 +49,14 @@ struct NotificationsSheet: View {
                     VStack(alignment: .leading, spacing: 12) {
                         SettingsLabel(systemName: "calendar", title: "发送频率")
 
-                        Picker("发送频率", selection: $cadence) {
-                            Text("每天").tag("daily")
-                            Text("每两天").tag("2days")
-                            Text("每周").tag("weekly")
-                        }
-                        .labelsHidden()
-                        .pickerStyle(.segmented)
+                        GlassSegmentedControl(
+                            selection: $cadence,
+                            options: [
+                                SegmentOption(id: "daily", title: "每天"),
+                                SegmentOption(id: "2days", title: "每两天"),
+                                SegmentOption(id: "weekly", title: "每周")
+                            ]
+                        )
                     }
                     .padding(.horizontal, 22)
                     .padding(.top, 15)
@@ -121,7 +123,9 @@ struct NotificationsSheet: View {
                 .frame(maxWidth: .infinity)
                 .frame(height: 46)
             }
-            .buttonStyle(.glassProminent)
+            .buttonStyle(.plain)
+            .foregroundStyle(.primary)
+            .glassEffect(.regular.interactive(), in: Capsule())
             .disabled(isSendingTest)
 
             if let testMessage {
