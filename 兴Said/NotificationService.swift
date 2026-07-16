@@ -13,21 +13,35 @@ enum TestNotificationResult {
 }
 
 enum NotificationService {
-    private static let scheduledIdentifierPrefix = "兴曰日常-"
+    private static let scheduledIdentifierPrefix = "兴曰日常-v2-"
+    private static let legacyIdentifierPrefix = "兴曰日常-"
     private static let schedulingDays = 28
+    private static let randomPendingLimit = 56
+    private static let randomPeriodLimit = 28
+    private static let randomStartHour = 9
+    private static let randomEndHour = 21
 
     static func configure(
         mode: String,
-        randomStartTime: String,
-        randomEndTime: String,
+        cadence: String,
         scheduledTime: String,
         quotes: [XingQuote],
-        requestAuthorization: Bool
+        requestAuthorization: Bool,
+        forceReschedule: Bool
     ) async {
         let center = UNUserNotificationCenter.current()
-        await removeScheduledNotifications(from: center)
 
-        guard !Task.isCancelled, mode != "off", !quotes.isEmpty else { return }
+        if mode == "off" {
+            await removeScheduledNotifications(from: center)
+            return
+        }
+
+        guard !Task.isCancelled, !quotes.isEmpty else { return }
+        if !forceReschedule, await hasActiveSchedule(in: center) {
+            return
+        }
+
+        await removeScheduledNotifications(from: center)
         guard await canScheduleNotifications(using: center, requestAuthorization: requestAuthorization) else {
             return
         }
@@ -35,8 +49,7 @@ enum NotificationService {
         switch mode {
         case "random":
             await scheduleRandomNotifications(
-                from: randomStartTime,
-                to: randomEndTime,
+                cadence: cadence,
                 quotes: quotes,
                 center: center
             )
@@ -112,56 +125,67 @@ enum NotificationService {
     private static func removeScheduledNotifications(from center: UNUserNotificationCenter) async {
         let identifiers = await center.pendingNotificationRequests()
             .map(\.identifier)
-            .filter { $0.hasPrefix(scheduledIdentifierPrefix) }
+            .filter { $0.hasPrefix(legacyIdentifierPrefix) }
 
         center.removePendingNotificationRequests(withIdentifiers: identifiers)
     }
 
+    private static func hasActiveSchedule(in center: UNUserNotificationCenter) async -> Bool {
+        await center.pendingNotificationRequests()
+            .contains { $0.identifier.hasPrefix(scheduledIdentifierPrefix) }
+    }
+
     private static func scheduleRandomNotifications(
-        from startTime: String,
-        to endTime: String,
+        cadence: String,
         quotes: [XingQuote],
         center: UNUserNotificationCenter
     ) async {
-        guard let start = timeComponents(from: startTime), let end = timeComponents(from: endTime) else {
-            return
-        }
-
         let calendar = Calendar.current
         let now = Date()
-        var scheduledDayCount = 0
-        var dayOffset = 0
+        let daysPerPeriod = cadenceDays(for: cadence)
+        let firstPeriodStart = calendar.startOfDay(for: now)
+        var scheduledCount = 0
+        var periodIndex = 0
 
-        while !Task.isCancelled, scheduledDayCount < schedulingDays, dayOffset < schedulingDays + 2 {
-            defer { dayOffset += 1 }
+        while !Task.isCancelled,
+              scheduledCount < randomPendingLimit,
+              periodIndex < randomPeriodLimit {
+            defer { periodIndex += 1 }
 
             guard
-                let day = calendar.date(byAdding: .day, value: dayOffset, to: calendar.startOfDay(for: now)),
-                let windowStart = calendar.date(bySettingHour: start.hour, minute: start.minute, second: 0, of: day),
-                var windowEnd = calendar.date(bySettingHour: end.hour, minute: end.minute, second: 0, of: day)
+                let periodStart = calendar.date(
+                    byAdding: .day,
+                    value: periodIndex * daysPerPeriod,
+                    to: firstPeriodStart
+                ),
+                let periodEnd = calendar.date(byAdding: .day, value: daysPerPeriod, to: periodStart)
             else {
                 continue
             }
 
-            if windowEnd <= windowStart {
-                guard let nextDayEnd = calendar.date(byAdding: .day, value: 1, to: windowEnd) else { continue }
-                windowEnd = nextDayEnd
-            }
+            let windows = deliveryWindows(
+                from: periodStart,
+                to: periodEnd,
+                after: now.addingTimeInterval(5),
+                calendar: calendar
+            )
+            guard !windows.isEmpty else { continue }
 
-            let earliest = max(windowStart, now.addingTimeInterval(5))
-            guard earliest < windowEnd else { continue }
+            let notificationCount = Int.random(in: 2...10)
+            guard scheduledCount + notificationCount <= randomPendingLimit else { break }
 
-            let dates = twoRandomDates(from: earliest, to: windowEnd)
+            let dates = randomDates(count: notificationCount, within: windows)
+            guard dates.count == notificationCount else { continue }
             for (slot, date) in dates.enumerated() {
                 await addNotification(
                     at: date,
                     quote: quotes.randomElement() ?? quotes[0],
-                    identifier: "\(scheduledIdentifierPrefix)\(dayOffset)-\(slot)",
+                    identifier: "\(scheduledIdentifierPrefix)random-\(periodIndex)-\(slot)",
                     center: center
                 )
             }
 
-            scheduledDayCount += 1
+            scheduledCount += notificationCount
         }
     }
 
@@ -229,15 +253,68 @@ enum NotificationService {
         try? await center.add(request)
     }
 
-    private static func twoRandomDates(from start: Date, to end: Date) -> [Date] {
-        let duration = max(2, Int(end.timeIntervalSince(start)))
-        let firstOffset = Int.random(in: 0..<(duration / 2))
-        let secondOffset = Int.random(in: (duration / 2)..<duration)
+    private static func cadenceDays(for cadence: String) -> Int {
+        switch cadence {
+        case "2days": 2
+        case "weekly": 7
+        default: 1
+        }
+    }
 
-        return [
-            start.addingTimeInterval(TimeInterval(firstOffset)),
-            start.addingTimeInterval(TimeInterval(secondOffset))
-        ]
+    private static func deliveryWindows(
+        from periodStart: Date,
+        to periodEnd: Date,
+        after earliestDate: Date,
+        calendar: Calendar
+    ) -> [(start: Date, end: Date)] {
+        var windows: [(start: Date, end: Date)] = []
+        var day = periodStart
+
+        while day < periodEnd {
+            guard
+                let start = calendar.date(bySettingHour: randomStartHour, minute: 0, second: 0, of: day),
+                let end = calendar.date(bySettingHour: randomEndHour, minute: 0, second: 0, of: day)
+            else {
+                day = calendar.date(byAdding: .day, value: 1, to: day) ?? periodEnd
+                continue
+            }
+
+            let clippedStart = max(start, earliestDate)
+            if clippedStart < end {
+                windows.append((clippedStart, end))
+            }
+
+            day = calendar.date(byAdding: .day, value: 1, to: day) ?? periodEnd
+        }
+
+        return windows
+    }
+
+    private static func randomDates(
+        count: Int,
+        within windows: [(start: Date, end: Date)]
+    ) -> [Date] {
+        let durations = windows.map { max(0, Int($0.end.timeIntervalSince($0.start))) }
+        let totalDuration = durations.reduce(0, +)
+        let minimumAverageSpacing = 30 * 60
+        guard totalDuration >= count * minimumAverageSpacing else { return [] }
+
+        let offsets = (0..<count).map { index in
+            let lowerBound = totalDuration * index / count
+            let upperBound = totalDuration * (index + 1) / count
+            return Int.random(in: lowerBound..<upperBound)
+        }
+
+        return offsets.compactMap { offset in
+            var remaining = offset
+            for (index, duration) in durations.enumerated() {
+                if remaining < duration {
+                    return windows[index].start.addingTimeInterval(TimeInterval(remaining))
+                }
+                remaining -= duration
+            }
+            return nil
+        }
     }
 
     private static func timeComponents(from value: String) -> (hour: Int, minute: Int)? {

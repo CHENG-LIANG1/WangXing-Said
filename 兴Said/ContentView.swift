@@ -11,8 +11,7 @@ struct ContentView: View {
     @AppStorage("favoriteQuoteIDs") private var favoriteQuoteIDs = ""
     @AppStorage("didMigrateDefaultFavorites") private var didMigrateDefaultFavorites = false
     @AppStorage("notificationMode") private var notificationMode = "random"
-    @AppStorage("notificationRandomStartTime") private var notificationRandomStartTime = "09:00"
-    @AppStorage("notificationRandomEndTime") private var notificationRandomEndTime = "21:00"
+    @AppStorage("notificationCadence") private var notificationCadence = "daily"
     @AppStorage("notificationTime") private var notificationTime = "10:00"
     @AppStorage("hasSeenGestureGuide") private var hasSeenGestureGuide = false
 
@@ -88,7 +87,7 @@ struct ContentView: View {
                         onToggleFavorite: toggleSelectedFavorite,
                         onOpenNotifications: {
                             isShowingNotifications = true
-                            scheduleNotificationRefresh()
+                            ensureNotificationSchedule()
                         }
                     )
                     .padding(.bottom, 28)
@@ -134,8 +133,7 @@ struct ContentView: View {
         .sheet(isPresented: $isShowingNotifications) {
             NotificationsSheet(
                 mode: $notificationMode,
-                randomStartTime: $notificationRandomStartTime,
-                randomEndTime: $notificationRandomEndTime,
+                cadence: $notificationCadence,
                 scheduledTime: $notificationTime,
                 onTest: {
                     let quote = quotes.randomElement() ?? selectedQuote
@@ -154,15 +152,12 @@ struct ContentView: View {
         }
         .task {
             migrateDefaultFavoritesIfNeeded()
-            await refreshNotifications(requestAuthorization: false)
+            await refreshNotifications(requestAuthorization: false, forceReschedule: false)
         }
         .onChange(of: notificationMode) {
             scheduleNotificationRefresh()
         }
-        .onChange(of: notificationRandomStartTime) {
-            scheduleNotificationRefresh()
-        }
-        .onChange(of: notificationRandomEndTime) {
+        .onChange(of: notificationCadence) {
             scheduleNotificationRefresh()
         }
         .onChange(of: notificationTime) {
@@ -215,18 +210,24 @@ struct ContentView: View {
         notificationRefreshTask = Task {
             try? await Task.sleep(for: .milliseconds(250))
             guard !Task.isCancelled else { return }
-            await refreshNotifications(requestAuthorization: true)
+            await refreshNotifications(requestAuthorization: true, forceReschedule: true)
         }
     }
 
-    private func refreshNotifications(requestAuthorization: Bool) async {
+    private func ensureNotificationSchedule() {
+        Task {
+            await refreshNotifications(requestAuthorization: true, forceReschedule: false)
+        }
+    }
+
+    private func refreshNotifications(requestAuthorization: Bool, forceReschedule: Bool) async {
         await NotificationService.configure(
             mode: notificationMode,
-            randomStartTime: notificationRandomStartTime,
-            randomEndTime: notificationRandomEndTime,
+            cadence: notificationCadence,
             scheduledTime: notificationTime,
             quotes: quotes,
-            requestAuthorization: requestAuthorization
+            requestAuthorization: requestAuthorization,
+            forceReschedule: forceReschedule
         )
     }
 }

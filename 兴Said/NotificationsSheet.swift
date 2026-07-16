@@ -8,8 +8,7 @@ import SwiftUI
 
 struct NotificationsSheet: View {
     @Binding var mode: String
-    @Binding var randomStartTime: String
-    @Binding var randomEndTime: String
+    @Binding var cadence: String
     @Binding var scheduledTime: String
     let onTest: () async -> TestNotificationResult
 
@@ -47,26 +46,25 @@ struct NotificationsSheet: View {
             Group {
                 switch mode {
                 case "random":
-                    VStack(alignment: .leading, spacing: 14) {
+                    VStack(alignment: .leading, spacing: 12) {
                         HStack {
-                            SettingsLabel(systemName: "clock.arrow.2.circlepath", title: "发送区间")
+                            SettingsLabel(systemName: "calendar", title: "发送频率")
 
                             Spacer()
 
-                            Label("每天 2 条", systemImage: "sparkles")
+                            Label("每周期 2～10 条", systemImage: "sparkles")
                                 .font(.system(size: 12, weight: .semibold, design: .rounded))
                                 .foregroundStyle(.secondary)
                         }
 
-                        HStack(spacing: 12) {
-                            timeField(title: "开始", selection: randomStartDate)
-
-                            Image(systemName: "arrow.right")
-                                .font(.system(size: 13, weight: .bold))
-                                .foregroundStyle(.tertiary)
-
-                            timeField(title: "结束", selection: randomEndDate)
-                        }
+                        GlassSegmentedControl(
+                            selection: $cadence,
+                            options: [
+                                SegmentOption(id: "daily", title: "每天"),
+                                SegmentOption(id: "2days", title: "每两天"),
+                                SegmentOption(id: "weekly", title: "每周")
+                            ]
+                        )
                     }
                     .padding(.horizontal, 22)
                     .padding(.top, 15)
@@ -181,33 +179,19 @@ struct NotificationsSheet: View {
         case "scheduled":
             return "按设定的时间发送语录"
         default:
-            return "每天在选定区间内随机发送两条语录"
+            return "\(cadenceTitle)随机发送 2～10 条语录"
         }
     }
 
-    private func timeField(title: String, selection: Binding<Date>) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title)
-                .font(.system(size: 11, weight: .medium, design: .rounded))
-                .foregroundStyle(.secondary)
-
-            DatePicker(
-                title,
-                selection: selection,
-                displayedComponents: .hourAndMinute
-            )
-            .labelsHidden()
-            .datePickerStyle(.compact)
+    private var cadenceTitle: String {
+        switch cadence {
+        case "2days":
+            return "每两天"
+        case "weekly":
+            return "每周"
+        default:
+            return "每天"
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var randomStartDate: Binding<Date> {
-        timeBinding(for: $randomStartTime, fallback: "09:00")
-    }
-
-    private var randomEndDate: Binding<Date> {
-        timeBinding(for: $randomEndTime, fallback: "21:00")
     }
 
     private var scheduledDate: Binding<Date> {
