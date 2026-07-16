@@ -138,7 +138,7 @@ struct ContentView: View {
                 randomEndTime: $notificationRandomEndTime,
                 scheduledTime: $notificationTime,
                 onTest: {
-                    let quote = quotes.randomElement()?.text ?? selectedQuote.text
+                    let quote = quotes.randomElement() ?? selectedQuote
                     return await NotificationService.sendTestNotification(quote: quote)
                 }
             )
@@ -225,7 +225,7 @@ struct ContentView: View {
             randomStartTime: notificationRandomStartTime,
             randomEndTime: notificationRandomEndTime,
             scheduledTime: notificationTime,
-            quotes: quotes.map(\.text),
+            quotes: quotes,
             requestAuthorization: requestAuthorization
         )
     }

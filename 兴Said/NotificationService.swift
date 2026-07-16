@@ -21,7 +21,7 @@ enum NotificationService {
         randomStartTime: String,
         randomEndTime: String,
         scheduledTime: String,
-        quotes: [String],
+        quotes: [XingQuote],
         requestAuthorization: Bool
     ) async {
         let center = UNUserNotificationCenter.current()
@@ -51,7 +51,7 @@ enum NotificationService {
         }
     }
 
-    static func sendTestNotification(quote: String) async -> TestNotificationResult {
+    static func sendTestNotification(quote: XingQuote) async -> TestNotificationResult {
         let center = UNUserNotificationCenter.current()
         let settings = await center.notificationSettings()
 
@@ -73,7 +73,8 @@ enum NotificationService {
 
         let content = UNMutableNotificationContent()
         content.title = "兴曰"
-        content.body = quote
+        content.subtitle = quote.attributionText
+        content.body = quote.text
         content.sound = .default
         content.threadIdentifier = "兴曰语录"
 
@@ -119,7 +120,7 @@ enum NotificationService {
     private static func scheduleRandomNotifications(
         from startTime: String,
         to endTime: String,
-        quotes: [String],
+        quotes: [XingQuote],
         center: UNUserNotificationCenter
     ) async {
         guard let start = timeComponents(from: startTime), let end = timeComponents(from: endTime) else {
@@ -166,7 +167,7 @@ enum NotificationService {
 
     private static func scheduleDailyNotifications(
         at time: String,
-        quotes: [String],
+        quotes: [XingQuote],
         center: UNUserNotificationCenter
     ) async {
         guard let selectedTime = timeComponents(from: time) else { return }
@@ -206,7 +207,7 @@ enum NotificationService {
 
     private static func addNotification(
         at date: Date,
-        quote: String,
+        quote: XingQuote,
         identifier: String,
         center: UNUserNotificationCenter
     ) async {
@@ -214,7 +215,8 @@ enum NotificationService {
 
         let content = UNMutableNotificationContent()
         content.title = "兴曰"
-        content.body = quote
+        content.subtitle = quote.attributionText
+        content.body = quote.text
         content.sound = .default
         content.threadIdentifier = "兴曰语录"
 

@@ -107,9 +107,10 @@ candidates.first(MAX_IMPORTS).each do |_value, number, text, date|
     "tags" => tags,
     "sources" => [
       {
-        "name" => "#{SOURCE_NAME}（#{date}）",
+        "name" => SOURCE_NAME,
         "url" => "#{SOURCE_URL}##{number}",
-        "sourceNumber" => number
+        "sourceNumber" => number,
+        "date" => date
       }
     ]
   }

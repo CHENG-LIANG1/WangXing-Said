@@ -93,7 +93,7 @@ private struct QuotePage: View {
                 .minimumScaleFactor(0.68)
                 .foregroundStyle(textColor)
 
-            Text(quote.author)
+            Text(quote.attributionText)
                 .font(.system(size: 11, weight: .black, design: .rounded))
                 .foregroundStyle(textColor.opacity(0.78))
         }

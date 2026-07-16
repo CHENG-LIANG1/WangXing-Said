@@ -30,7 +30,8 @@ enum XingQuoteStore {
                 QuoteSource(
                     name: "本地备用",
                     url: "",
-                    sourceNumber: 1
+                    sourceNumber: 1,
+                    date: nil
                 )
             ]
         )

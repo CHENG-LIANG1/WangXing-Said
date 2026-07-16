@@ -40,11 +40,17 @@ struct FavoritesSheet: View {
                                 onSelect(quote)
                             } label: {
                                 HStack(alignment: .center, spacing: 16) {
-                                    Text(quote.text)
-                                        .font(.system(size: 16, weight: .semibold, design: .rounded))
-                                        .lineLimit(4)
-                                        .multilineTextAlignment(.leading)
-                                        .foregroundStyle(.primary)
+                                    VStack(alignment: .leading, spacing: 7) {
+                                        Text(quote.text)
+                                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                            .lineLimit(4)
+                                            .multilineTextAlignment(.leading)
+                                            .foregroundStyle(.primary)
+
+                                        Text(quote.attributionText)
+                                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                            .foregroundStyle(.secondary)
+                                    }
 
                                     Spacer(minLength: 8)
 

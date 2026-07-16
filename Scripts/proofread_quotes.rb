@@ -77,6 +77,7 @@ abort "用法: ruby Scripts/proofread_quotes.rb <XingQuotes.json>" unless path
 
 quotes = JSON.parse(File.read(path, encoding: "UTF-8"))
 changed = 0
+dates_extracted = 0
 
 quotes.each do |quote|
   before = quote.fetch("text")
@@ -87,7 +88,17 @@ quotes.each do |quote|
   text = balance_quotes(text, "“", "”")
   quote["text"] = text
   changed += 1 if text != before
+
+  quote.fetch("sources", []).each do |source|
+    match = source.fetch("name", "").match(/（(\d{4}-\d{2}-\d{2})）/)
+    next unless match
+
+    source["name"] = source.fetch("name").sub(match[0], "")
+    source["date"] ||= match[1]
+    dates_extracted += 1
+  end
 end
 
 File.write(path, JSON.pretty_generate(quotes) + "\n")
 puts "已校对 #{quotes.length} 条饭否语录，修正 #{changed} 条。"
+puts "已整理 #{dates_extracted} 条原始发布日期。"
