@@ -98,8 +98,7 @@ struct ContentView: View {
 
             if !hasSeenGestureGuide {
                 GestureGuideView(
-                    tint: background.textColor,
-                    onDoubleTap: nextBackground
+                    tint: background.textColor
                 ) {
                     hasSeenGestureGuide = true
                 }

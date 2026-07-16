@@ -7,10 +7,10 @@ import SwiftUI
 
 struct GestureGuideView: View {
     let tint: Color
-    let onDoubleTap: () -> Void
     let onDismiss: () -> Void
 
     @State private var isAnimating = false
+    @State private var isDismissing = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -48,8 +48,9 @@ struct GestureGuideView: View {
             .padding(.bottom, 38)
         }
         .padding(.horizontal, 28)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .contentShape(Rectangle())
-        .onTapGesture(count: 2, perform: onDoubleTap)
+        .onTapGesture(perform: dismiss)
         .onAppear {
             withAnimation(.easeInOut(duration: 0.85).repeatForever(autoreverses: true)) {
                 isAnimating = true
@@ -59,6 +60,8 @@ struct GestureGuideView: View {
     }
 
     private func dismiss() {
+        guard !isDismissing else { return }
+        isDismissing = true
         HapticFeedback.success()
         withAnimation(.easeOut(duration: 0.24)) {
             onDismiss()
