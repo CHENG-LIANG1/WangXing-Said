@@ -8,7 +8,8 @@ import SwiftUI
 struct ContentView: View {
     @AppStorage("selectedQuoteID") private var selectedQuoteID = "xing-0001"
     @AppStorage("backgroundIndex") private var backgroundIndex = 0
-    @AppStorage("favoriteQuoteIDs") private var favoriteQuoteIDs = "xing-0001,xing-0014,xing-0173"
+    @AppStorage("favoriteQuoteIDs") private var favoriteQuoteIDs = ""
+    @AppStorage("didMigrateDefaultFavorites") private var didMigrateDefaultFavorites = false
     @AppStorage("notificationMode") private var notificationMode = "random"
     @AppStorage("notificationRandomStartTime") private var notificationRandomStartTime = "09:00"
     @AppStorage("notificationRandomEndTime") private var notificationRandomEndTime = "21:00"
@@ -23,7 +24,7 @@ struct ContentView: View {
 
     private let quotes = XingQuoteStore.all
     private let backgrounds = XingBackground.palette
-    private let defaultFavoriteIDs = Set(["xing-0001", "xing-0014", "xing-0173"])
+    private let legacyDefaultFavoriteIDs = Set(["xing-0001", "xing-0014", "xing-0173"])
 
     private var selectedQuote: XingQuote {
         quotes.first { $0.id == selectedQuoteID } ?? quotes[0]
@@ -32,13 +33,7 @@ struct ContentView: View {
     private var favorites: Set<String> {
         let savedIDs = Set(favoriteQuoteIDs.split(separator: ",").map(String.init))
         let quoteIDs = Set(quotes.map(\.id))
-        let validIDs = savedIDs.intersection(quoteIDs)
-
-        if !savedIDs.isEmpty && validIDs.isEmpty {
-            return defaultFavoriteIDs
-        }
-
-        return validIDs
+        return savedIDs.intersection(quoteIDs)
     }
 
     private var favoriteQuotes: [XingQuote] {
@@ -142,6 +137,7 @@ struct ContentView: View {
             }
         }
         .task {
+            migrateDefaultFavoritesIfNeeded()
             await refreshNotifications(requestAuthorization: false)
         }
         .onChange(of: notificationMode) {
@@ -170,6 +166,16 @@ struct ContentView: View {
             ids.insert(selectedQuote.id)
         }
         favoriteQuoteIDs = quotes.map(\.id).filter { ids.contains($0) }.joined(separator: ",")
+    }
+
+    private func migrateDefaultFavoritesIfNeeded() {
+        guard !didMigrateDefaultFavorites else { return }
+
+        let savedIDs = Set(favoriteQuoteIDs.split(separator: ",").map(String.init))
+        if savedIDs == legacyDefaultFavoriteIDs {
+            favoriteQuoteIDs = ""
+        }
+        didMigrateDefaultFavorites = true
     }
 
     private func scheduleNotificationRefresh() {
