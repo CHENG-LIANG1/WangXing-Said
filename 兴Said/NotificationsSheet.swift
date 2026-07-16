@@ -116,6 +116,7 @@ struct NotificationsSheet: View {
     private var testButton: some View {
         VStack(spacing: 8) {
             Button {
+                HapticFeedback.tap()
                 sendTestNotification()
             } label: {
                 HStack(spacing: 9) {
@@ -161,10 +162,13 @@ struct NotificationsSheet: View {
 
             switch result {
             case .scheduled:
+                HapticFeedback.success()
                 testMessage = "测试通知将在一秒后送达"
             case .denied:
+                HapticFeedback.error()
                 testMessage = "请先在系统设置中允许通知"
             case .failed:
+                HapticFeedback.error()
                 testMessage = "发送失败，请稍后再试"
             }
         }
@@ -218,6 +222,7 @@ struct NotificationsSheet: View {
                     ?? Date()
             },
             set: { newValue in
+                HapticFeedback.selection()
                 value.wrappedValue = Self.timeFormatter.string(from: newValue)
             }
         )

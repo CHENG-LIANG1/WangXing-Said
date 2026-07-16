@@ -36,6 +36,7 @@ struct FavoritesSheet: View {
                     LazyVStack(spacing: 0) {
                         ForEach(Array(quotes.enumerated()), id: \.element.id) { index, quote in
                             Button {
+                                HapticFeedback.selection()
                                 onSelect(quote)
                             } label: {
                                 HStack(alignment: .center, spacing: 16) {

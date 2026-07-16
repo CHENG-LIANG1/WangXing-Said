@@ -57,6 +57,7 @@ struct QuotePager: View {
         .scrollPosition(id: $scrollID)
         .onScrollPhaseChange { _, newPhase in
             guard newPhase == .idle, let scrollID, scrollID != selectedID else { return }
+            HapticFeedback.page()
             onSelectionChange(scrollID)
         }
         .onChange(of: selectedID) { _, newID in

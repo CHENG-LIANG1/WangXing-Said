@@ -57,6 +57,7 @@ struct GlassSegmentedControl: View {
         HStack(spacing: 3) {
             ForEach(options) { option in
                 Button {
+                    HapticFeedback.selection()
                     withAnimation(.snappy(duration: 0.30, extraBounce: 0.04)) {
                         selection = option.id
                     }
@@ -81,7 +82,6 @@ struct GlassSegmentedControl: View {
         }
         .padding(4)
         .adaptiveInteractiveGlass(in: Capsule())
-        .sensoryFeedback(.selection, trigger: selection)
     }
 
     private var selectionFill: Color {

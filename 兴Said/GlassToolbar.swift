@@ -49,7 +49,10 @@ private struct ToolbarButton: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
+        Button {
+            HapticFeedback.tap()
+            action()
+        } label: {
             Image(systemName: systemName)
                 .font(.system(size: 20, weight: .bold))
                 .symbolEffect(.bounce, value: isSelected)

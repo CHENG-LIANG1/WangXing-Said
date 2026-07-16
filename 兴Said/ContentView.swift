@@ -95,7 +95,6 @@ struct ContentView: View {
             }
         }
         .preferredColorScheme(.light)
-        .sensoryFeedback(.selection, trigger: selectedQuoteID)
         .sheet(isPresented: $isShowingFavorites) {
             FavoritesSheet(
                 quotes: favoriteQuotes,
@@ -152,9 +151,25 @@ struct ContentView: View {
         .onChange(of: notificationTime) {
             scheduleNotificationRefresh()
         }
+        .onChange(of: isShowingFavorites) { oldValue, newValue in
+            if oldValue && !newValue {
+                HapticFeedback.page()
+            }
+        }
+        .onChange(of: isShowingNotifications) { oldValue, newValue in
+            if oldValue && !newValue {
+                HapticFeedback.page()
+            }
+        }
+        .onChange(of: favoritesDetent) {
+            if isShowingFavorites {
+                HapticFeedback.page()
+            }
+        }
     }
 
     private func nextBackground() {
+        HapticFeedback.backgroundChange()
         backgroundIndex = (backgroundIndex + 1) % backgrounds.count
     }
 

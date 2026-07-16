@@ -59,6 +59,7 @@ struct GestureGuideView: View {
     }
 
     private func dismiss() {
+        HapticFeedback.success()
         withAnimation(.easeOut(duration: 0.24)) {
             onDismiss()
         }
