@@ -21,6 +21,7 @@ struct ContentView: View {
     @State private var favoritesDetent: PresentationDetent = .medium
     @State private var instantQuoteID: String?
     @State private var notificationRefreshTask: Task<Void, Never>?
+    @State private var topSafeAreaInset: CGFloat = 0
 
     private let quotes = XingQuoteStore.all
     private let backgrounds = XingBackground.palette
@@ -63,6 +64,18 @@ struct ContentView: View {
 
             if hasSeenGestureGuide {
                 VStack(spacing: 0) {
+                    if topSafeAreaInset > 24 {
+                        ScreenshotBrandPill(tint: background.textColor)
+                            .padding(.top, topSafeAreaInset + 8)
+                    }
+
+                    Spacer()
+                }
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+                .zIndex(2)
+
+                VStack(spacing: 0) {
                     Spacer()
 
                     GlassToolbar(
@@ -93,6 +106,11 @@ struct ContentView: View {
                 .transition(.opacity)
                 .zIndex(10)
             }
+        }
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.safeAreaInsets.top
+        } action: { newValue in
+            topSafeAreaInset = newValue
         }
         .preferredColorScheme(.light)
         .sheet(isPresented: $isShowingFavorites) {
