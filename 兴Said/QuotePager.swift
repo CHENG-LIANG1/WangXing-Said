@@ -53,7 +53,7 @@ struct QuotePager: View {
             .scrollTargetLayout()
         }
         .scrollIndicators(.hidden)
-        .scrollTargetBehavior(.viewAligned(limitBehavior: .alwaysByOne, anchor: .top))
+        .adaptiveQuotePaging()
         .scrollPosition(id: $scrollID)
         .onScrollPhaseChange { _, newPhase in
             guard newPhase == .idle, let scrollID, scrollID != selectedID else { return }

@@ -10,13 +10,16 @@ struct ContentView: View {
     @AppStorage("backgroundIndex") private var backgroundIndex = 0
     @AppStorage("favoriteQuoteIDs") private var favoriteQuoteIDs = "xing-0001,xing-0014,xing-0173"
     @AppStorage("notificationMode") private var notificationMode = "random"
-    @AppStorage("notificationCadence") private var notificationCadence = "daily"
+    @AppStorage("notificationRandomStartTime") private var notificationRandomStartTime = "09:00"
+    @AppStorage("notificationRandomEndTime") private var notificationRandomEndTime = "21:00"
     @AppStorage("notificationTime") private var notificationTime = "10:00"
+    @AppStorage("hasSeenGestureGuide") private var hasSeenGestureGuide = false
 
     @State private var isShowingFavorites = false
     @State private var isShowingNotifications = false
     @State private var favoritesDetent: PresentationDetent = .medium
     @State private var instantQuoteID: String?
+    @State private var notificationRefreshTask: Task<Void, Never>?
 
     private let quotes = XingQuoteStore.all
     private let backgrounds = XingBackground.palette
@@ -60,21 +63,40 @@ struct ContentView: View {
                 onDoubleTap: nextBackground,
                 onSelectionChange: { selectedQuoteID = $0 }
             )
+            .opacity(hasSeenGestureGuide ? 1 : 0)
+            .allowsHitTesting(hasSeenGestureGuide)
 
-            VStack(spacing: 0) {
-                Spacer()
+            if hasSeenGestureGuide {
+                VStack(spacing: 0) {
+                    Spacer()
 
-                GlassToolbar(
-                    isFavorite: favorites.contains(selectedQuote.id),
+                    GlassToolbar(
+                        isFavorite: favorites.contains(selectedQuote.id),
+                        tint: background.textColor,
+                        onOpenFavorites: {
+                            favoritesDetent = .medium
+                            isShowingFavorites = true
+                        },
+                        onToggleFavorite: toggleSelectedFavorite,
+                        onOpenNotifications: {
+                            isShowingNotifications = true
+                            scheduleNotificationRefresh()
+                        }
+                    )
+                    .padding(.bottom, 28)
+                }
+                .transition(.opacity)
+            }
+
+            if !hasSeenGestureGuide {
+                GestureGuideView(
                     tint: background.textColor,
-                    onOpenFavorites: {
-                        favoritesDetent = .medium
-                        isShowingFavorites = true
-                    },
-                    onToggleFavorite: toggleSelectedFavorite,
-                    onOpenNotifications: { isShowingNotifications = true }
-                )
-                .padding(.bottom, 28)
+                    onDoubleTap: nextBackground
+                ) {
+                    hasSeenGestureGuide = true
+                }
+                .transition(.opacity)
+                .zIndex(10)
             }
         }
         .preferredColorScheme(.light)
@@ -92,16 +114,18 @@ struct ContentView: View {
             .tint(background.textColor)
             .preferredColorScheme(background.prefersLightText ? .dark : .light)
             .presentationDetents([.medium, .large], selection: $favoritesDetent)
+            .presentationCornerRadius(34)
             .presentationDragIndicator(.visible)
             .presentationBackground {
-                SheetGlassBackground(background: background)
+                SheetGlassBackground()
             }
         }
         .sheet(isPresented: $isShowingNotifications) {
             NotificationsSheet(
                 mode: $notificationMode,
-                cadence: $notificationCadence,
-                time: $notificationTime,
+                randomStartTime: $notificationRandomStartTime,
+                randomEndTime: $notificationRandomEndTime,
+                scheduledTime: $notificationTime,
                 onTest: {
                     let quote = quotes.randomElement()?.text ?? selectedQuote.text
                     return await NotificationService.sendTestNotification(quote: quote)
@@ -111,10 +135,26 @@ struct ContentView: View {
             .tint(background.textColor)
             .preferredColorScheme(background.prefersLightText ? .dark : .light)
             .presentationDetents([.medium])
+            .presentationCornerRadius(34)
             .presentationDragIndicator(.visible)
             .presentationBackground {
-                SheetGlassBackground(background: background)
+                SheetGlassBackground()
             }
+        }
+        .task {
+            await refreshNotifications(requestAuthorization: false)
+        }
+        .onChange(of: notificationMode) {
+            scheduleNotificationRefresh()
+        }
+        .onChange(of: notificationRandomStartTime) {
+            scheduleNotificationRefresh()
+        }
+        .onChange(of: notificationRandomEndTime) {
+            scheduleNotificationRefresh()
+        }
+        .onChange(of: notificationTime) {
+            scheduleNotificationRefresh()
         }
     }
 
@@ -130,6 +170,26 @@ struct ContentView: View {
             ids.insert(selectedQuote.id)
         }
         favoriteQuoteIDs = quotes.map(\.id).filter { ids.contains($0) }.joined(separator: ",")
+    }
+
+    private func scheduleNotificationRefresh() {
+        notificationRefreshTask?.cancel()
+        notificationRefreshTask = Task {
+            try? await Task.sleep(for: .milliseconds(250))
+            guard !Task.isCancelled else { return }
+            await refreshNotifications(requestAuthorization: true)
+        }
+    }
+
+    private func refreshNotifications(requestAuthorization: Bool) async {
+        await NotificationService.configure(
+            mode: notificationMode,
+            randomStartTime: notificationRandomStartTime,
+            randomEndTime: notificationRandomEndTime,
+            scheduledTime: notificationTime,
+            quotes: quotes.map(\.text),
+            requestAuthorization: requestAuthorization
+        )
     }
 }
 

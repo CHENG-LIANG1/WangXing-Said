@@ -37,7 +37,7 @@ struct GlassToolbar: View {
             )
         }
         .padding(5)
-        .glassEffect(.regular.interactive(), in: Capsule())
+        .adaptiveInteractiveGlass(in: Capsule())
     }
 }
 

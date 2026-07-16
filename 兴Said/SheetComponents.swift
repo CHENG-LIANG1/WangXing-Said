@@ -80,7 +80,7 @@ struct GlassSegmentedControl: View {
             }
         }
         .padding(4)
-        .glassEffect(.regular.interactive(), in: Capsule())
+        .adaptiveInteractiveGlass(in: Capsule())
         .sensoryFeedback(.selection, trigger: selection)
     }
 

@@ -6,19 +6,21 @@
 import SwiftUI
 
 struct SheetGlassBackground: View {
-    let background: XingBackground
-
     var body: some View {
-        LinearGradient(
-            stops: background.gradientStops,
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-        .glassEffect(
-            .regular.tint(background.color.opacity(0.26)),
-            in: Rectangle()
-        )
+        Color.white
+            .opacity(0.001)
+            .adaptiveSheetGlass(in: sheetShape)
         .ignoresSafeArea()
+    }
+
+    private var sheetShape: UnevenRoundedRectangle {
+        UnevenRoundedRectangle(
+            topLeadingRadius: 34,
+            bottomLeadingRadius: 0,
+            bottomTrailingRadius: 0,
+            topTrailingRadius: 34,
+            style: .continuous
+        )
     }
 }
 
@@ -26,23 +28,41 @@ struct LiquidBackdrop: View {
     let background: XingBackground
 
     var body: some View {
-        ZStack {
-            LinearGradient(
-                stops: background.gradientStops,
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+        Group {
+            if background.isSolid {
+                ZStack {
+                    background.topColor
 
-            LinearGradient(
-                colors: [
-                    .white.opacity(0.16),
-                    .clear,
-                    .black.opacity(background.prefersLightText ? 0.22 : 0.07)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+                    LinearGradient(
+                        stops: [
+                            .init(color: .white.opacity(0.11), location: 0),
+                            .init(color: .clear, location: 0.48),
+                            .init(color: .black.opacity(0.09), location: 1)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                }
+            } else {
+                BackgroundGradient(background: background)
+            }
         }
         .ignoresSafeArea()
+    }
+}
+
+private struct BackgroundGradient: View {
+    let background: XingBackground
+
+    var body: some View {
+        LinearGradient(
+            stops: [
+                .init(color: background.topColor, location: 0),
+                .init(color: background.middleColor, location: 0.52),
+                .init(color: background.bottomColor, location: 1)
+            ],
+            startPoint: UnitPoint(x: 0.38, y: 0),
+            endPoint: UnitPoint(x: 0.62, y: 1)
+        )
     }
 }

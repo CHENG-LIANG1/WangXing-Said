@@ -6,38 +6,81 @@
 import SwiftUI
 
 struct XingBackground {
-    let color: Color
-    let collisionColor: Color
+    let topColor: Color
+    let middleColor: Color
+    let bottomColor: Color
     let textColor: Color
     let prefersLightText: Bool
+    let isSolid: Bool
 
-    var gradientStops: [Gradient.Stop] {
-        [
-            Gradient.Stop(color: color, location: 0),
-            Gradient.Stop(color: color, location: 0.38),
-            Gradient.Stop(color: collisionColor, location: 0.72),
-            Gradient.Stop(color: collisionColor, location: 1)
-        ]
+    init(
+        topColor: Color,
+        middleColor: Color,
+        bottomColor: Color,
+        textColor: Color,
+        prefersLightText: Bool,
+        isSolid: Bool = false
+    ) {
+        self.topColor = topColor
+        self.middleColor = middleColor
+        self.bottomColor = bottomColor
+        self.textColor = textColor
+        self.prefersLightText = prefersLightText
+        self.isSolid = isSolid
+    }
+
+    static func solid(_ color: Color, textColor: Color, prefersLightText: Bool) -> XingBackground {
+        XingBackground(
+            topColor: color,
+            middleColor: color,
+            bottomColor: color,
+            textColor: textColor,
+            prefersLightText: prefersLightText,
+            isSolid: true
+        )
     }
 
     static let palette = [
-        XingBackground(color: Color(red: 1.00, green: 0.42, blue: 0.22), collisionColor: Color(red: 1.00, green: 0.28, blue: 0.62), textColor: .black, prefersLightText: false),
-        XingBackground(color: Color(red: 0.98, green: 0.84, blue: 0.18), collisionColor: Color(red: 0.62, green: 0.94, blue: 0.16), textColor: .black, prefersLightText: false),
-        XingBackground(color: Color(red: 0.28, green: 0.86, blue: 0.62), collisionColor: Color(red: 0.10, green: 0.72, blue: 0.95), textColor: .black, prefersLightText: false),
-        XingBackground(color: Color(red: 0.68, green: 0.58, blue: 0.98), collisionColor: Color(red: 1.00, green: 0.45, blue: 0.38), textColor: .black, prefersLightText: false),
-        XingBackground(color: Color(red: 0.00, green: 0.80, blue: 0.68), collisionColor: Color(red: 1.00, green: 0.88, blue: 0.18), textColor: .black, prefersLightText: false),
-        XingBackground(color: Color(red: 0.20, green: 0.65, blue: 1.00), collisionColor: Color(red: 1.00, green: 0.55, blue: 0.12), textColor: .black, prefersLightText: false),
-        XingBackground(color: Color(red: 1.00, green: 0.30, blue: 0.60), collisionColor: Color(red: 1.00, green: 0.56, blue: 0.16), textColor: .black, prefersLightText: false),
-        XingBackground(color: Color(red: 0.65, green: 0.85, blue: 1.00), collisionColor: Color(red: 0.98, green: 0.72, blue: 0.10), textColor: .black, prefersLightText: false),
-        XingBackground(color: Color(red: 0.45, green: 0.90, blue: 0.45), collisionColor: Color(red: 1.00, green: 0.48, blue: 0.70), textColor: .black, prefersLightText: false),
-        XingBackground(color: Color(red: 0.08, green: 0.09, blue: 0.12), collisionColor: Color(red: 0.10, green: 0.25, blue: 0.65), textColor: .white, prefersLightText: true),
-        XingBackground(color: Color(red: 0.25, green: 0.08, blue: 0.58), collisionColor: Color(red: 0.65, green: 0.05, blue: 0.38), textColor: .white, prefersLightText: true),
-        XingBackground(color: Color(red: 0.02, green: 0.12, blue: 0.28), collisionColor: Color(red: 0.00, green: 0.35, blue: 0.38), textColor: .white, prefersLightText: true),
-        XingBackground(color: Color(red: 0.62, green: 0.02, blue: 0.16), collisionColor: Color(red: 0.30, green: 0.05, blue: 0.45), textColor: .white, prefersLightText: true),
-        XingBackground(color: Color(red: 0.02, green: 0.22, blue: 0.58), collisionColor: Color(red: 0.68, green: 0.18, blue: 0.02), textColor: .white, prefersLightText: true),
-        XingBackground(color: Color(red: 0.02, green: 0.25, blue: 0.18), collisionColor: Color(red: 0.15, green: 0.10, blue: 0.40), textColor: .white, prefersLightText: true),
-        XingBackground(color: Color(red: 0.00, green: 0.30, blue: 0.42), collisionColor: Color(red: 0.52, green: 0.00, blue: 0.32), textColor: .white, prefersLightText: true),
-        XingBackground(color: Color(red: 0.38, green: 0.05, blue: 0.28), collisionColor: Color(red: 0.02, green: 0.28, blue: 0.55), textColor: .white, prefersLightText: true),
-        XingBackground(color: Color(red: 0.25, green: 0.28, blue: 0.02), collisionColor: Color(red: 0.55, green: 0.08, blue: 0.08), textColor: .white, prefersLightText: true)
+        // Soft, low-contrast gradients inspired by established editorial palettes.
+        XingBackground(topColor: Color(hex: 0xFF9A9E), middleColor: Color(hex: 0xFCAFB1), bottomColor: Color(hex: 0xFAD0C4), textColor: .black, prefersLightText: false),
+        XingBackground(topColor: Color(hex: 0xFFECD2), middleColor: Color(hex: 0xFFD2B9), bottomColor: Color(hex: 0xFCB69F), textColor: .black, prefersLightText: false),
+        XingBackground(topColor: Color(hex: 0xF6D365), middleColor: Color(hex: 0xF7BA75), bottomColor: Color(hex: 0xFDA085), textColor: .black, prefersLightText: false),
+        XingBackground(topColor: Color(hex: 0xFBC2EB), middleColor: Color(hex: 0xD9C2ED), bottomColor: Color(hex: 0xA6C1EE), textColor: .black, prefersLightText: false),
+        XingBackground(topColor: Color(hex: 0xA1C4FD), middleColor: Color(hex: 0xB2D7FC), bottomColor: Color(hex: 0xC2E9FB), textColor: .black, prefersLightText: false),
+        XingBackground(topColor: Color(hex: 0xD4FC79), middleColor: Color(hex: 0xB5F18C), bottomColor: Color(hex: 0x96E6A1), textColor: .black, prefersLightText: false),
+        XingBackground(topColor: Color(hex: 0x84FAB0), middleColor: Color(hex: 0x89E7C7), bottomColor: Color(hex: 0x8FD3F4), textColor: .black, prefersLightText: false),
+        XingBackground(topColor: Color(hex: 0xA8EDEA), middleColor: Color(hex: 0xD1E2E6), bottomColor: Color(hex: 0xFED6E3), textColor: .black, prefersLightText: false),
+        XingBackground(topColor: Color(hex: 0xCFD9DF), middleColor: Color(hex: 0xD9E2E7), bottomColor: Color(hex: 0xE2EBF0), textColor: .black, prefersLightText: false),
+
+        XingBackground(topColor: Color(hex: 0x0B1026), middleColor: Color(hex: 0x17254A), bottomColor: Color(hex: 0x243B6B), textColor: .white, prefersLightText: true),
+        XingBackground(topColor: Color(hex: 0x21152E), middleColor: Color(hex: 0x3E2347), bottomColor: Color(hex: 0x5A315D), textColor: .white, prefersLightText: true),
+        XingBackground(topColor: Color(hex: 0x0B281F), middleColor: Color(hex: 0x153F32), bottomColor: Color(hex: 0x1F5A46), textColor: .white, prefersLightText: true),
+        XingBackground(topColor: Color(hex: 0x2A0F1B), middleColor: Color(hex: 0x4A192A), bottomColor: Color(hex: 0x6D263D), textColor: .white, prefersLightText: true),
+        XingBackground(topColor: Color(hex: 0x092C32), middleColor: Color(hex: 0x10464E), bottomColor: Color(hex: 0x17606A), textColor: .white, prefersLightText: true),
+        XingBackground(topColor: Color(hex: 0x1B1638), middleColor: Color(hex: 0x272751), bottomColor: Color(hex: 0x343B78), textColor: .white, prefersLightText: true),
+        XingBackground(topColor: Color(hex: 0x18181E), middleColor: Color(hex: 0x38252F), bottomColor: Color(hex: 0x583342), textColor: .white, prefersLightText: true),
+        XingBackground(topColor: Color(hex: 0x071D33), middleColor: Color(hex: 0x0F354B), bottomColor: Color(hex: 0x164E63), textColor: .white, prefersLightText: true),
+        XingBackground(topColor: Color(hex: 0x202619), middleColor: Color(hex: 0x353E24), bottomColor: Color(hex: 0x4B5630), textColor: .white, prefersLightText: true),
+
+        .solid(.black, textColor: .white, prefersLightText: true),
+        .solid(.white, textColor: .black, prefersLightText: false),
+        .solid(Color(red: 1.00, green: 0.48, blue: 0.00), textColor: .black, prefersLightText: false),
+        .solid(Color(red: 0.20, green: 0.78, blue: 0.35), textColor: .black, prefersLightText: false),
+        .solid(Color(red: 1.00, green: 0.84, blue: 0.04), textColor: .black, prefersLightText: false),
+        .solid(Color(red: 0.00, green: 0.48, blue: 1.00), textColor: .white, prefersLightText: true),
+        .solid(Color(red: 1.00, green: 0.23, blue: 0.19), textColor: .white, prefersLightText: true),
+        .solid(Color(red: 1.00, green: 0.18, blue: 0.33), textColor: .white, prefersLightText: true),
+        .solid(Color(red: 0.69, green: 0.32, blue: 0.87), textColor: .white, prefersLightText: true),
+        .solid(Color(red: 0.20, green: 0.68, blue: 0.90), textColor: .black, prefersLightText: false)
     ]
+}
+
+private extension Color {
+    init(hex: Int) {
+        self.init(
+            red: Double((hex >> 16) & 0xFF) / 255,
+            green: Double((hex >> 8) & 0xFF) / 255,
+            blue: Double(hex & 0xFF) / 255
+        )
+    }
 }

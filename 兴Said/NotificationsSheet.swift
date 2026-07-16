@@ -8,8 +8,9 @@ import SwiftUI
 
 struct NotificationsSheet: View {
     @Binding var mode: String
-    @Binding var cadence: String
-    @Binding var time: String
+    @Binding var randomStartTime: String
+    @Binding var randomEndTime: String
+    @Binding var scheduledTime: String
     let onTest: () async -> TestNotificationResult
 
     @State private var isSendingTest = false
@@ -46,17 +47,26 @@ struct NotificationsSheet: View {
             Group {
                 switch mode {
                 case "random":
-                    VStack(alignment: .leading, spacing: 12) {
-                        SettingsLabel(systemName: "calendar", title: "发送频率")
+                    VStack(alignment: .leading, spacing: 14) {
+                        HStack {
+                            SettingsLabel(systemName: "clock.arrow.2.circlepath", title: "发送区间")
 
-                        GlassSegmentedControl(
-                            selection: $cadence,
-                            options: [
-                                SegmentOption(id: "daily", title: "每天"),
-                                SegmentOption(id: "2days", title: "每两天"),
-                                SegmentOption(id: "weekly", title: "每周")
-                            ]
-                        )
+                            Spacer()
+
+                            Label("每天 2 条", systemImage: "sparkles")
+                                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.secondary)
+                        }
+
+                        HStack(spacing: 12) {
+                            timeField(title: "开始", selection: randomStartDate)
+
+                            Image(systemName: "arrow.right")
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundStyle(.tertiary)
+
+                            timeField(title: "结束", selection: randomEndDate)
+                        }
                     }
                     .padding(.horizontal, 22)
                     .padding(.top, 15)
@@ -69,7 +79,7 @@ struct NotificationsSheet: View {
 
                         DatePicker(
                             "发送时间",
-                            selection: notificationDate,
+                            selection: scheduledDate,
                             displayedComponents: .hourAndMinute
                         )
                         .labelsHidden()
@@ -125,7 +135,7 @@ struct NotificationsSheet: View {
             }
             .buttonStyle(.plain)
             .foregroundStyle(.primary)
-            .glassEffect(.regular.interactive(), in: Capsule())
+            .adaptiveInteractiveGlass(in: Capsule())
             .disabled(isSendingTest)
 
             if let testMessage {
@@ -167,17 +177,48 @@ struct NotificationsSheet: View {
         case "scheduled":
             return "按设定的时间发送语录"
         default:
-            return "随机为你送上一句语录"
+            return "每天在选定区间内随机发送两条语录"
         }
     }
 
-    private var notificationDate: Binding<Date> {
+    private func timeField(title: String, selection: Binding<Date>) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .foregroundStyle(.secondary)
+
+            DatePicker(
+                title,
+                selection: selection,
+                displayedComponents: .hourAndMinute
+            )
+            .labelsHidden()
+            .datePickerStyle(.compact)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var randomStartDate: Binding<Date> {
+        timeBinding(for: $randomStartTime, fallback: "09:00")
+    }
+
+    private var randomEndDate: Binding<Date> {
+        timeBinding(for: $randomEndTime, fallback: "21:00")
+    }
+
+    private var scheduledDate: Binding<Date> {
+        timeBinding(for: $scheduledTime, fallback: "10:00")
+    }
+
+    private func timeBinding(for value: Binding<String>, fallback: String) -> Binding<Date> {
         Binding(
             get: {
-                Self.timeFormatter.date(from: time) ?? Self.defaultNotificationDate
+                Self.timeFormatter.date(from: value.wrappedValue)
+                    ?? Self.timeFormatter.date(from: fallback)
+                    ?? Date()
             },
             set: { newValue in
-                time = Self.timeFormatter.string(from: newValue)
+                value.wrappedValue = Self.timeFormatter.string(from: newValue)
             }
         )
     }
@@ -188,6 +229,4 @@ struct NotificationsSheet: View {
         formatter.dateFormat = "HH:mm"
         return formatter
     }()
-
-    private static let defaultNotificationDate = timeFormatter.date(from: "10:00") ?? Date()
 }
