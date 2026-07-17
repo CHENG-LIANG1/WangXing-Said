@@ -14,18 +14,7 @@ struct XingQuote: Codable, Identifiable, Equatable {
     let sources: [QuoteSource]
 
     var attributionText: String {
-        var components = [author, "来源：\(platform)"]
-        if let date = sources.compactMap(\.date).first,
-           let formattedDate = Self.chineseDate(from: date) {
-            components.append(formattedDate)
-        }
-        return components.joined(separator: " · ")
-    }
-
-    private static func chineseDate(from value: String) -> String? {
-        let components = value.split(separator: "-").compactMap { Int($0) }
-        guard components.count == 3 else { return nil }
-        return "\(components[0])年\(components[1])月\(components[2])日"
+        "王兴"
     }
 }
 
