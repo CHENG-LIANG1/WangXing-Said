@@ -21,6 +21,7 @@ struct ContentView: View {
     @State private var instantQuoteID: String?
     @State private var notificationRefreshTask: Task<Void, Never>?
     @State private var topSafeAreaInset: CGFloat = 0
+    @State private var isScreenCaptured = UIScreen.main.isCaptured
 
     private let quotes = XingQuoteStore.all
     private let backgrounds = XingBackground.palette
@@ -45,6 +46,13 @@ struct ContentView: View {
         backgrounds[backgroundIndex % backgrounds.count]
     }
 
+    private var shouldShowScreenshotBrand: Bool {
+        let processInfo = ProcessInfo.processInfo
+        let isScreenshotLaunch = processInfo.arguments.contains("--screenshot-mode")
+            || processInfo.environment["XING_SCREENSHOT_MODE"] == "1"
+        return isScreenshotLaunch || isScreenCaptured
+    }
+
     var body: some View {
         ZStack {
             LiquidBackdrop(background: background)
@@ -63,7 +71,7 @@ struct ContentView: View {
 
             if hasSeenGestureGuide {
                 VStack(spacing: 0) {
-                    if topSafeAreaInset > 24 {
+                    if shouldShowScreenshotBrand && topSafeAreaInset > 24 {
                         ScreenshotBrandPill(tint: background.textColor)
                             .padding(.top, topSafeAreaInset + 8)
                     }
@@ -109,6 +117,9 @@ struct ContentView: View {
             proxy.safeAreaInsets.top
         } action: { newValue in
             topSafeAreaInset = newValue
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIScreen.capturedDidChangeNotification)) { _ in
+            isScreenCaptured = UIScreen.main.isCaptured
         }
         .preferredColorScheme(.light)
         .sheet(isPresented: $isShowingFavorites) {
