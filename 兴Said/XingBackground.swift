@@ -12,6 +12,7 @@ struct XingBackground {
     let textColor: Color
     let prefersLightText: Bool
     let isSolid: Bool
+    let isGlass: Bool
 
     init(
         topColor: Color,
@@ -19,7 +20,8 @@ struct XingBackground {
         bottomColor: Color,
         textColor: Color,
         prefersLightText: Bool,
-        isSolid: Bool = false
+        isSolid: Bool = false,
+        isGlass: Bool = false
     ) {
         self.topColor = topColor
         self.middleColor = middleColor
@@ -27,6 +29,7 @@ struct XingBackground {
         self.textColor = textColor
         self.prefersLightText = prefersLightText
         self.isSolid = isSolid
+        self.isGlass = isGlass
     }
 
     static func solid(_ color: Color, textColor: Color, prefersLightText: Bool) -> XingBackground {
@@ -39,6 +42,15 @@ struct XingBackground {
             isSolid: true
         )
     }
+
+    static let liquidGlass = XingBackground(
+        topColor: Color(hex: 0xF8FAFF),
+        middleColor: Color(hex: 0xE8EEFF),
+        bottomColor: Color(hex: 0xFDF6FC),
+        textColor: Color(hex: 0x11131A),
+        prefersLightText: false,
+        isGlass: true
+    )
 
     static let palette = [
         // Soft, low-contrast gradients inspired by established editorial palettes.
@@ -71,7 +83,9 @@ struct XingBackground {
         .solid(Color(red: 1.00, green: 0.23, blue: 0.19), textColor: .white, prefersLightText: true),
         .solid(Color(red: 1.00, green: 0.18, blue: 0.33), textColor: .white, prefersLightText: true),
         .solid(Color(red: 0.69, green: 0.32, blue: 0.87), textColor: .white, prefersLightText: true),
-        .solid(Color(red: 0.20, green: 0.68, blue: 0.90), textColor: .black, prefersLightText: false)
+        .solid(Color(red: 0.20, green: 0.68, blue: 0.90), textColor: .black, prefersLightText: false),
+
+        liquidGlass
     ]
 }
 
